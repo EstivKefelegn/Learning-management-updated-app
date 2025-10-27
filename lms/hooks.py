@@ -110,6 +110,7 @@ doc_events = {
  	"LMS Course": {
 			"after_insert": "lms.api.course_notifications.notify_users_on_new_course"
 	},
+   
 }
 
 # Scheduled Tasks

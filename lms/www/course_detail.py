@@ -145,85 +145,122 @@ def get_related_courses(related_courses):
 # -----------------------------
 # Invoice generation
 # -----------------------------
-
 @frappe.whitelist()
 def generate_course_invoice(enrollment_name):
+    """
+    Generate invoice data from LMS Payment for course enrollment.
+    This uses LMS Payment data directly, not Sales Invoice.
+    """
     try:
-        enrollment = frappe.get_doc("LMS Enrollment", enrollment_name)
+        frappe.logger().info(f"🔍 Looking for payment data for enrollment: {enrollment_name}")
 
-        # Check if invoice already exists
-        if enrollment.payment:
-            invoice_name = frappe.db.get_value("LMS Invoice", 
-                {"payment_reference": enrollment.payment}, "name")
-            if invoice_name:
-                invoice = frappe.get_doc("LMS Invoice", invoice_name)
-                return {
-                    "success": True,
-                    "invoice_data": get_invoice_data(invoice),
-                    "invoice_number": invoice.invoice_number,
-                    "message": "Invoice already exists"
-                }
+        # Get enrollment details
+        if not frappe.db.exists("LMS Enrollment", enrollment_name):
+            return {
+                "success": False,
+                "error": "Enrollment not found."
+            }
+
+        enrollment = frappe.get_doc("LMS Enrollment", enrollment_name)
+        
+        if not enrollment.payment:
+            return {
+                "success": False,
+                "error": "No payment record found for this enrollment."
+            }
+
+        # Get payment details
+        payment = frappe.get_doc("LMS Payment", enrollment.payment)
+        
+        if not payment.payment_received:
+            return {
+                "success": False,
+                "error": "Payment not completed. Cannot generate invoice."
+            }
 
         # Get course details
-        course_price = frappe.get_value("LMS Course", enrollment.course, "course_price") or 0
-        course_title = frappe.get_value("LMS Course", enrollment.course, "title") or enrollment.course
+        course = frappe.get_doc("LMS Course", enrollment.course)
+        
+        # Get address details if available
+        address_details = {}
+        if payment.address:
+            try:
+                address_doc = frappe.get_doc("Address", payment.address)
+                address_details = {
+                    "address": address_doc.display(),
+                    "gstin": address_doc.gstin,
+                    "pan": getattr(address_doc, 'tax_id', None) or getattr(address_doc, 'pan', None)
+                }
+            except Exception:
+                address_details = {}
 
-        # Create a valid address first
-        address_name = create_valid_address(enrollment.member)
-        
-        # Create LMS Payment with address
-        payment_data = {
-            "doctype": "LMS Payment",
-            "member": enrollment.member,
-            "billing_name": enrollment.member_name or enrollment.member,
-            "payment_for_document_type": "LMS Course",
-            "payment_for_document": enrollment.course,
-            "enrollment": enrollment_name,
-            "course": enrollment.course,
-            "amount": course_price,
-            "currency": "INR",
-            "status": "Completed",
-            "payment_date": frappe.utils.nowdate(),
-            "address": address_name,  # This is required
-        }
-        
-        payment = frappe.get_doc(payment_data)
-        payment.insert(ignore_permissions=True)
-        
-        # Create LMS Invoice
+        # Prepare invoice data from LMS Payment
         invoice_data = {
-            "doctype": "LMS Invoice",
-            "customer": enrollment.member,
-            "billing_name": enrollment.member_name or enrollment.member,
-            "course": enrollment.course,
-            "amount": course_price,
-            "total_amount": course_price,
-            "invoice_date": frappe.utils.nowdate(),
-            "due_date": frappe.utils.add_days(frappe.utils.nowdate(), 30),
+            "number": payment.name,  # Use payment name as invoice number
+            "date": payment.creation.date(),
+            "due_date": payment.creation.date(),  # Same as creation date for paid invoices
             "status": "Paid",
-            "currency": "INR",
-            "payment_for": f"Course: {course_title}",
-            "payment_reference": payment.name,
+            "currency": payment.currency,
+            "total_amount": payment.amount,
+            "amount": payment.amount,  # Net amount (same as total for simplicity)
+            "tax_amount": 0,  # You can calculate this if you have tax details
+            "course_title": course.title,
+            "customer": payment.member,
+            "billing_name": payment.billing_name,
+            "payment_reference": payment.payment_id or payment.order_id,
+            "order_id": payment.order_id,
+            "payment_id": payment.payment_id,
+            "gstin": payment.gstin,
+            "pan": payment.pan
         }
+
+        # Add address details
+        invoice_data.update(address_details)
+
+        return {
+            "success": True,
+            "message": "Payment invoice generated successfully",
+            "invoice_data": invoice_data
+        }
+            
+    except Exception as e:
+        frappe.log_error(message=f"Payment Invoice Error: {str(e)}", title="Payment Invoice Generation")
+        return {"success": False, "error": str(e)}
+
+@frappe.whitelist()
+def get_sales_invoice(enrollment_name):
+    """
+    Fetch payment invoice data for this enrollment.
+    """
+    try:
+        # Check for enrollment and payment
+        if not frappe.db.exists("LMS Enrollment", enrollment_name):
+            return {
+                "success": False,
+                "message": "Enrollment not found."
+            }
+
+        enrollment = frappe.get_doc("LMS Enrollment", enrollment_name)
         
-        invoice = frappe.get_doc(invoice_data)
-        invoice.insert(ignore_permissions=True)
-        
-        enrollment.payment = payment.name
-        enrollment.save(ignore_permissions=True)
-        
-        frappe.db.commit()
+        if not enrollment.payment:
+            return {
+                "success": False,
+                "message": "No payment record found for this enrollment."
+            }
+
+        payment = frappe.get_doc("LMS Payment", enrollment.payment)
         
         return {
             "success": True,
-            "invoice_data": get_invoice_data(invoice),
-            "invoice_number": invoice.invoice_number,
-            "message": "Invoice generated successfully"
+            "invoice_name": payment.name,
+            "status": "Paid" if payment.payment_received else "Unpaid",
+            "currency": payment.currency,
+            "total": payment.amount,
+            "message": "Payment invoice found successfully."
         }
 
     except Exception as e:
-        frappe.log_error(message=f"Invoice Error: {str(e)}", title="LMS Invoice Generation")
-        frappe.db.rollback()
+        frappe.log_error(str(e), "Get Payment Invoice Error")
         return {"success": False, "error": str(e)}
 
 def create_valid_address(customer):

@@ -179,7 +179,6 @@
         </div>
         {% endif %}
     </div>
-
     <!-- Right Column - Course Info & Enrollment -->
     <div class="lg:col-span-1">
         <!-- Enrollment Card -->
@@ -205,6 +204,16 @@
                     class="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 mb-4">
                     Continue Learning
                 </button>
+
+                <!-- Invoice Generation Section -->
+                <div class="mb-4">
+                    <button id="generate-invoice-btn"
+                        class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition duration-300">
+                        Generate Invoice
+                    </button>
+                    <div id="invoice-result" class="mt-3 text-center"></div>
+                </div>
+
                 {% else %}
                 <!-- User is not enrolled - Show enrollment options -->
                 <button
@@ -217,278 +226,257 @@
                     {% endif %}
                 </button>
                 {% endif %}
-
-                {% if is_enrolled %}
-                <div class="mb-4">
-                    <button id="generate-invoice-btn"
-                        class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-purple-700 transition duration-300">
-                        Generate Invoice
-                    </button>
-                    <div id="invoice-result" class="mt-3 text-center"></div>
-                </div>
-
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const btn = document.getElementById('generate-invoice-btn');
-                        const enrollmentName = "{{ enrollment_name }}";
-
-                        if (!btn || !enrollmentName) {
-                            console.log('Button or enrollment name not found');
-                            return;
-                        }
-
-                        btn.addEventListener('click', function () {
-                            generateInvoice(enrollmentName);
-                        });
-                    });
-
-                    async function generateInvoice(enrollmentName) {
-                        const btn = document.getElementById('generate-invoice-btn');
-
-                        // Show loading state
-                        btn.disabled = true;
-                        btn.textContent = 'Generating Invoice...';
-                        btn.classList.add('opacity-50');
-
-                        try {
-                            const response = await fetch('/api/method/lms.www.course_detail.generate_course_invoice', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-Frappe-CSRF-Token': '{{ frappe.session.csrf_token }}'
-                                },
-                                body: JSON.stringify({ enrollment_name: enrollmentName })
-                            });
-
-                            const data = await response.json();
-                            console.log('Invoice response:', data);
-
-                            // Handle the response
-                            if (data.message && data.message.success) {
-                                if (data.message.invoice_data) {
-                                    showInvoice(data.message.invoice_data, data.message.message);
-                                } else if (data.message.invoice_number) {  // Check for invoice_number first
-                                    showBasicInvoice(data.message.invoice_number);
-                                } else if (data.message.invoice_name) {    // Fallback to invoice_name
-                                    showBasicInvoice(data.message.invoice_name);
-                                } else {
-                                    showSuccess(data.message.message || "Invoice generated successfully!");
-                                }
-                            } else if (data.message && data.message.error) {
-                                showError(data.message.error);
-                            } else {
-                                showError("Unexpected response from server");
-                            }
-                        } catch (error) {
-                            console.error('Invoice generation error:', error);
-                            showError("Network error: " + error.message);
-                        } finally {
-                            btn.disabled = false;
-                            btn.textContent = 'Generate Invoice';
-                            btn.classList.remove('opacity-50');
-                        }
-                    }
-
-                    function showInvoice(invoiceData, message = "Invoice Generated!") {
-                        const statusColors = {
-                            'Paid': 'bg-green-100 text-green-800',
-                            'Unpaid': 'bg-yellow-100 text-yellow-800',
-                            'Overdue': 'bg-red-100 text-red-800',
-                            'Cancelled': 'bg-gray-100 text-gray-800'
-                        };
-
-                        const statusClass = statusColors[invoiceData.status] || 'bg-gray-100 text-gray-800';
-
-                        const resultHTML = `
-        <div class="space-y-4 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 shadow-sm">
-            <!-- Header -->
-            <div class="flex items-center justify-center">
-                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-green-800 font-bold text-xl">${message}</h3>
-                    <p class="text-green-600 text-sm">Your course invoice is ready</p>
-                </div>
             </div>
-            
-            <!-- Invoice Details Card -->
-            <div class="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Invoice Number:</span>
-                            <span class="font-semibold">${invoiceData.number}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Invoice Date:</span>
-                            <span>${formatDate(invoiceData.date)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Due Date:</span>
-                            <span>${formatDate(invoiceData.due_date)}</span>
-                        </div>
-                        ${invoiceData.payment_reference ? `
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Payment Ref:</span>
-                            <span class="text-blue-600">${invoiceData.payment_reference}</span>
-                        </div>
-                        ` : ''}
+        </div>
+    </div>
+</div>
+
+{% if is_enrolled %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('generate-invoice-btn');
+        const enrollmentName = "{{ enrollment_name }}";
+
+        if (!btn || !enrollmentName) {
+            console.log('Button or enrollment name not found');
+            return;
+        }
+
+        btn.addEventListener('click', function () {
+            generateInvoice(enrollmentName);
+        });
+    });
+
+    async function generateInvoice(enrollmentName) {
+        const btn = document.getElementById('generate-invoice-btn');
+
+        // Show loading state
+        btn.disabled = true;
+        btn.textContent = 'Generating Invoice...';
+        btn.classList.add('opacity-50');
+
+        try {
+            const response = await fetch('/api/method/lms.www.course_detail.generate_course_invoice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Frappe-CSRF-Token': '{{ frappe.session.csrf_token }}'
+                },
+                body: JSON.stringify({ enrollment_name: enrollmentName })
+            });
+
+            const data = await response.json();
+            console.log('Payment Invoice response:', data);
+
+            // Handle the response
+            if (data.message && data.message.success) {
+                if (data.message.invoice_data) {
+                    showInvoice(data.message.invoice_data, data.message.message);
+                } else {
+                    showSuccess(data.message.message || "Invoice generated successfully!");
+                }
+            } else if (data.message && data.message.error) {
+                showError(data.message.error);
+            } else {
+                showError("Unexpected response from server");
+            }
+        } catch (error) {
+            console.error('Invoice generation error:', error);
+            showError("Network error: " + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Generate Invoice';
+            btn.classList.remove('opacity-50');
+        }
+    }
+
+    function showInvoice(invoiceData, message = "Invoice Generated!") {
+        const statusColors = {
+            'Paid': 'bg-green-100 text-green-800',
+            'Unpaid': 'bg-yellow-100 text-yellow-800',
+            'Overdue': 'bg-red-100 text-red-800',
+            'Cancelled': 'bg-gray-100 text-gray-800',
+            'Draft': 'bg-gray-100 text-gray-800'
+        };
+
+        const statusClass = statusColors[invoiceData.status] || 'bg-gray-100 text-gray-800';
+
+        const resultHTML = `
+            <div class="space-y-4 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 shadow-sm">
+                <!-- Header -->
+                <div class="flex items-center justify-center">
+                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
                     </div>
-                    <div class="space-y-2">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Customer:</span>
-                            <span>${invoiceData.billing_name || invoiceData.customer}</span>
+                    <div>
+                        <h3 class="text-green-800 font-bold text-xl">${message}</h3>
+                        <p class="text-green-600 text-sm">Your payment invoice is ready</p>
+                    </div>
+                </div>
+                
+                <!-- Invoice Details Card -->
+                <div class="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Payment Reference:</span>
+                                <span class="font-semibold">${invoiceData.number}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Payment Date:</span>
+                                <span>${formatDate(invoiceData.date)}</span>
+                            </div>
+                            ${invoiceData.order_id ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Order ID:</span>
+                                <span class="text-blue-600">${invoiceData.order_id}</span>
+                            </div>
+                            ` : ''}
+                            ${invoiceData.payment_id ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Payment ID:</span>
+                                <span class="text-blue-600">${invoiceData.payment_id}</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Course:</span>
-                            <span class="text-blue-600 font-medium">${invoiceData.course_title}</span>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Customer:</span>
+                                <span>${invoiceData.billing_name || invoiceData.customer}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Course:</span>
+                                <span class="text-blue-600 font-medium">${invoiceData.course_title}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600 font-medium">Status:</span>
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                                    ${invoiceData.status}
+                                </span>
+                            </div>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Status:</span>
-                            <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
-                                ${invoiceData.status}
+                    </div>
+                    
+                    <!-- Billing Details -->
+                    ${(invoiceData.address || invoiceData.gstin || invoiceData.pan) ? `
+                    <div class="border-t pt-3 mt-3">
+                        <h4 class="font-semibold text-gray-700 mb-2">Billing Details:</h4>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            ${invoiceData.address ? `<div>${invoiceData.address}</div>` : ''}
+                            ${invoiceData.gstin ? `<div><strong>GSTIN:</strong> ${invoiceData.gstin}</div>` : ''}
+                            ${invoiceData.pan ? `<div><strong>PAN:</strong> ${invoiceData.pan}</div>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Amount Section -->
+                    <div class="border-t pt-3 mt-3">
+                        <div class="space-y-1 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Course Fee:</span>
+                                <span>${invoiceData.currency} ${formatAmount(invoiceData.amount)}</span>
+                            </div>
+                            ${invoiceData.tax_amount > 0 ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Tax:</span>
+                                <span>${invoiceData.currency} ${formatAmount(invoiceData.tax_amount)}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="flex justify-between items-center text-lg font-bold mt-2 pt-2 border-t">
+                            <span class="text-gray-700">Total Amount:</span>
+                            <span class="text-green-600">
+                                ${invoiceData.currency} ${formatAmount(invoiceData.total_amount)}
                             </span>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Billing Details -->
-                ${(invoiceData.address || invoiceData.gstin || invoiceData.pan) ? `
-                <div class="border-t pt-3 mt-3">
-                    <h4 class="font-semibold text-gray-700 mb-2">Billing Details:</h4>
-                    <div class="text-sm text-gray-600 space-y-1">
-                        ${invoiceData.address ? `<div>${invoiceData.address}</div>` : ''}
-                        ${invoiceData.gstin ? `<div><strong>GSTIN:</strong> ${invoiceData.gstin}</div>` : ''}
-                        ${invoiceData.pan ? `<div><strong>PAN:</strong> ${invoiceData.pan}</div>` : ''}
-                    </div>
+                <!-- Action Buttons -->
+                <div class="flex space-x-3">
+                    <button onclick="printInvoice()" 
+                        class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Print Invoice
+                    </button>
+                    <button onclick="downloadPaymentInvoice('${invoiceData.number}')" 
+                        class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download PDF
+                    </button>
                 </div>
-                ` : ''}
                 
-                <!-- Amount Section -->
-                <div class="border-t pt-3 mt-3">
-                    ${invoiceData.tax_amount > 0 ? `
-                    <div class="space-y-1 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Course Fee:</span>
-                            <span>${invoiceData.currency} ${formatAmount(invoiceData.amount)}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Tax:</span>
-                            <span>${invoiceData.currency} ${formatAmount(invoiceData.tax_amount)}</span>
-                        </div>
-                    </div>
-                    ` : ''}
-                    <div class="flex justify-between items-center text-lg font-bold mt-2 pt-2 border-t">
-                        <span class="text-gray-700">Total Amount:</span>
-                        <span class="text-green-600">
-                            ${invoiceData.currency} ${formatAmount(invoiceData.total_amount)}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex space-x-3">
-                <button onclick="printInvoice()" 
-                    class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                    </svg>
-                    Print Invoice
-                </button>
-                <button onclick="downloadInvoice('${invoiceData.number}')" 
-                    class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Download PDF
-                </button>
-            </div>
-            
-            <p class="text-xs text-gray-500 text-center">
-                This invoice has been generated for your records. You can print or download it for your reference.
-            </p>
-        </div>
-    `;
-                        document.getElementById("invoice-result").innerHTML = resultHTML;
-                    }
-
-                    function showBasicInvoice(invoiceNumber) {
-                        const resultHTML = `
-        <div class="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
-            <div class="flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-green-800 font-semibold text-lg">Invoice Generated!</span>
-            </div>
-            
-            <div class="bg-white rounded-lg p-4 border">
-                <p class="text-center text-gray-700">
-                    Invoice <strong>${invoiceNumber}</strong> has been successfully generated.
+                <p class="text-xs text-gray-500 text-center">
+                    This payment invoice has been generated for your records. You can print or download it for your reference.
                 </p>
             </div>
-        </div>
-    `;
-                        document.getElementById("invoice-result").innerHTML = resultHTML;
-                    }
+        `;
+        document.getElementById("invoice-result").innerHTML = resultHTML;
+    }
 
-                    function showSuccess(message) {
-                        const resultHTML = `
-        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
-            <div class="flex items-center justify-center">
-                <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-green-800 font-semibold">${message}</span>
+    function showSuccess(message) {
+        const resultHTML = `
+            <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                <div class="flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-green-800 font-semibold">${message}</span>
+                </div>
             </div>
-        </div>
-    `;
-                        document.getElementById("invoice-result").innerHTML = resultHTML;
-                    }
+        `;
+        document.getElementById("invoice-result").innerHTML = resultHTML;
+    }
 
-                    function showError(message) {
-                        const resultHTML = `
-        <div class="p-4 bg-red-50 rounded-lg border border-red-200">
-            <div class="flex items-center justify-center">
-                <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-red-800 font-semibold">${message}</span>
+    function showError(message) {
+        const resultHTML = `
+            <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                <div class="flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-red-800 font-semibold">${message}</span>
+                </div>
             </div>
-        </div>
-    `;
-                        document.getElementById("invoice-result").innerHTML = resultHTML;
-                    }
+        `;
+        document.getElementById("invoice-result").innerHTML = resultHTML;
+    }
 
-                    // Utility functions
-                    function formatDate(dateString) {
-                        if (!dateString) return 'N/A';
-                        return new Date(dateString).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                        });
-                    }
+    // Utility functions
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (e) {
+            return 'N/A';
+        }
+    }
 
-                    function formatAmount(amount) {
-                        if (!amount) return '0.00';
-                        return parseFloat(amount).toFixed(2);
-                    }
+    function formatAmount(amount) {
+        if (!amount) return '0.00';
+        return parseFloat(amount).toFixed(2);
+    }
 
-                    function printInvoice() {
-                        window.print();
-                    }
+    function printInvoice() {
+        window.print();
+    }
 
-                    function downloadInvoice(invoiceNumber) {
-                        // You can implement PDF download here
-                        // For now, just print
-                        window.print();
-                    }
-                </script>
+    function downloadPaymentInvoice(paymentNumber) {
+        // You can implement PDF generation for payment invoice here
+        // For now, just print
+        window.print();
+    }
+</script>
 
                 <style>
                     @media print {

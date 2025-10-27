@@ -9,12 +9,12 @@
 		>
 			<UserDropdown :isCollapsed="sidebarStore.isSidebarCollapsed" />
 			<div class="flex flex-col" v-if="sidebarSettings.data">
-				<div v-for="link in sidebarLinks" class="mx-2 my-0.5">
-					<SidebarLink
-						:link="link"
-						:isCollapsed="sidebarStore.isSidebarCollapsed"
-					/>
-				</div>
+				<SidebarLink
+					v-for="link in sidebarLinks"
+					:link="link"
+					:isCollapsed="sidebarStore.isSidebarCollapsed"
+					class="mx-2 my-0.5"
+				/>
 			</div>
 			<div
 				v-if="sidebarSettings.data?.web_pages?.length || isModerator"
@@ -54,18 +54,15 @@
 					class="flex flex-col transition-all duration-300 ease-in-out"
 					:class="!sidebarStore.isWebpagesCollapsed ? 'block' : 'hidden'"
 				>
-					<div
+					<SidebarLink
 						v-for="link in sidebarSettings.data.web_pages"
+						:link="link"
+						:isCollapsed="sidebarStore.isSidebarCollapsed"
 						class="mx-2 my-0.5"
-					>
-						<SidebarLink
-							:link="link"
-							:isCollapsed="sidebarStore.isSidebarCollapsed"
-							:showControls="isModerator ? true : false"
-							@openModal="openPageModal"
-							@deletePage="deletePage"
-						/>
-					</div>
+						:showControls="isModerator ? true : false"
+						@openModal="openPageModal"
+						@deletePage="deletePage"
+					/>
 				</div>
 			</div>
 		</div>
@@ -193,6 +190,7 @@ import {
 	markRaw,
 	h,
 	onUnmounted,
+	computed
 } from 'vue'
 import { getSidebarLinks } from '@/utils'
 import { usersStore } from '@/stores/user'
@@ -235,6 +233,8 @@ let sidebarStore = useSidebar()
 const socket = inject('$socket')
 const unreadCount = ref(0)
 const sidebarLinks = ref(getSidebarLinks())
+console.log('Sidebar links initial:', getSidebarLinks());
+
 const showPageModal = ref(false)
 const isModerator = ref(false)
 const isInstructor = ref(false)
@@ -253,6 +253,8 @@ const iconProps = {
 	width: 16,
 	height: 16,
 }
+
+
 
 onMounted(() => {
 	addNotifications()
@@ -316,53 +318,73 @@ const addNotifications = () => {
 	}
 }
 
-const addQuizzes = () => {
-	if (isInstructor.value || isModerator.value) {
-		sidebarLinks.value.splice(4, 0, {
-			label: 'Quizzes',
-			icon: 'CircleHelp',
-			to: 'Quizzes',
-			activeFor: [
-				'Quizzes',
-				'QuizForm',
-				'QuizSubmissionList',
-				'QuizSubmission',
-			],
-		})
-	}
-}
+const isAdmin = computed(() => {
+  return (
+    userResource.data?.roles?.includes('System Manager') ||
+    userResource.data?.roles?.includes('Administrator')
+  );
+});
 
+
+const addQuizzes = () => {
+  console.log('addQuizzes called', {
+    isInstructor: isInstructor.value,
+    isModerator: isModerator.value,
+    isAdmin: isAdmin.value,
+    roles: userResource.data?.roles,
+  });
+  if (isInstructor.value || isModerator.value || isAdmin.value) {
+    sidebarLinks.value.splice(4, 0, {
+      label: 'Quizzes',
+      icon: 'CircleHelp',
+      to: 'Quizzes',
+      activeFor: ['Quizzes','QuizForm','QuizSubmissionList','QuizSubmission'],
+    });
+    console.log('✅ Quizzes added');
+  } else {
+    console.log('🚫 Quizzes NOT added');
+  }
+};
+
+/*
 const addAssignments = () => {
-	if (isInstructor.value || isModerator.value) {
-		sidebarLinks.value.splice(5, 0, {
-			label: 'Assignments',
-			icon: 'Pencil',
-			to: 'Assignments',
-			activeFor: [
-				'Assignments',
-				'AssignmentForm',
-				'AssignmentSubmissionList',
-				'AssignmentSubmission',
-			],
-		})
-	}
-}
+  console.log('addAssignments called', {
+    isInstructor: isInstructor.value,
+    isModerator: isModerator.value,
+    isAdmin: isAdmin.value,
+    roles: userResource.data?.roles,
+  });
+  if (isInstructor.value || isModerator.value || isAdmin.value) {
+    sidebarLinks.value.splice(5, 0, {
+      label: 'Assignments',
+      icon: 'Pencil',
+      to: 'Assignments',
+      activeFor: ['Assignments','AssignmentForm','AssignmentSubmissionList','AssignmentSubmission'],
+    });
+    console.log('✅ Assignments added');
+  } else {
+    console.log('🚫 Assignments NOT added');
+  }
+};
+*/
 
 const addProgrammingExercises = () => {
-	if (isInstructor.value || isModerator.value) {
-		sidebarLinks.value.splice(3, 0, {
-			label: 'Programming Exercises',
-			icon: 'Code',
-			to: 'ProgrammingExercises',
-			activeFor: [
-				'ProgrammingExercises',
-				'ProgrammingExerciseForm',
-				'ProgrammingExerciseSubmissions',
-				'ProgrammingExerciseSubmission',
-			],
-		})
-	}
-}
+  if (isInstructor.value || isModerator.value || isAdmin.value) {
+    sidebarLinks.value.splice(3, 0, {
+      label: 'Programming Exercises',
+      icon: 'Code',
+      to: 'ProgrammingExercises',
+      activeFor: [
+        'ProgrammingExercises',
+        'ProgrammingExerciseForm',
+        'ProgrammingExerciseSubmissions',
+        'ProgrammingExerciseSubmission',
+      ],
+    });
+  }
+};
+
+
 
 const addPrograms = async () => {
 	let canAddProgram = await checkIfCanAddProgram()
@@ -385,7 +407,7 @@ const addContactUsDetails = () => {
 			icon: settingsStore.contactUsURL?.data ? 'Headset' : 'Mail',
 			to: settingsStore.contactUsURL?.data
 				? settingsStore.contactUsURL.data
-				: settingsStore.contactUsEmail?.data,
+				: `mailto:${settingsStore.contactUsEmail?.data}`,
 		})
 	}
 }
@@ -659,19 +681,27 @@ const setUpOnboarding = () => {
 	}
 }
 
-watch(userResource, () => {
-	addContactUsDetails()
-	if (userResource.data) {
-		isModerator.value = userResource.data.is_moderator
-		isInstructor.value = userResource.data.is_instructor
-		addHome()
-		addPrograms()
-		addProgrammingExercises()
-		addQuizzes()
-		addAssignments()
-		setUpOnboarding()
-	}
-})
+watch(
+  () => userResource.data,
+  (data) => {
+    if (!data) return
+    console.log('👤 userResource loaded:', data.full_name, data.roles)
+
+    isModerator.value = data.is_moderator
+    isInstructor.value = data.is_instructor
+
+    addHome()
+    addPrograms()
+    addProgrammingExercises()
+    addQuizzes()
+   // addAssignments()
+    setUpOnboarding()
+
+    console.log('📋 Sidebar after adding:', sidebarLinks.value)
+  },
+  { immediate: true }
+)
+
 
 const redirectToWebsite = () => {
 	window.open('https://frappe.io/learning', '_blank')

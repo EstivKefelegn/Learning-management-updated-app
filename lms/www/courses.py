@@ -56,7 +56,7 @@ def get_context(context):
                 "owner",
                 "category",
             ],
-            filters={"published": 1},
+            filters={"published": 1, "featured": 1},
             order_by="creation desc",
             limit_page_length=3
         )

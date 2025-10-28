@@ -110,6 +110,11 @@ doc_events = {
  	"LMS Course": {
 			"after_insert": "lms.api.course_notifications.notify_users_on_new_course"
 	},
+ 
+    "LMS Enrollment": {
+        "after_insert": "lms.api.lms_enrollment.notify_admin_on_enrollment"
+}
+
    
 }
 

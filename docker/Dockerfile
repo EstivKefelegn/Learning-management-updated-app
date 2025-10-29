@@ -6,7 +6,8 @@ COPY . /home/frappe/frappe-bench/
 
 EXPOSE 8000
 
-# Environment variable for logs (Render will mount /workspace at runtime)
+# Logs directory that is writable on Render
 ENV FRAPPE_LOGS_DIR=/workspace/logs
 
+# Start Frappe
 CMD ["bench", "start"]

@@ -4,11 +4,13 @@ WORKDIR /home/frappe/frappe-bench
 
 COPY . /home/frappe/frappe-bench/
 
-# Just create logs directory, no chown
-RUN mkdir -p /home/frappe/frappe-bench/logs
+# Create a writable logs directory in /workspace
+ENV FRAPPE_LOGS_DIR=/workspace/logs
+RUN mkdir -p /workspace/logs
 
 EXPOSE 8000
 
+# Environment variables (from Render dashboard)
 ENV DB_HOST=${DB_HOST} \
     DB_PORT=${DB_PORT} \
     DB_NAME=${DB_NAME} \

@@ -7,20 +7,21 @@ WORKDIR /home/frappe/frappe-bench
 # Fix permissions as root first
 USER root
 
+# Reinstall Frappe in development mode
+RUN cd /home/frappe/frappe-bench && \
+    pip install -e apps/frappe
+
 # Create logs directory with proper permissions
 RUN mkdir -p /home/frappe/frappe-bench/logs && \
     chown -R frappe:frappe /home/frappe/frappe-bench && \
     chmod -R 755 /home/frappe/frappe-bench/logs
 
-# Install Frappe framework first
-RUN pip install frappe-bench
-
 # Copy LMS app into container
-COPY --chown=frappe:frappe . /home/frappe/frappe-bench/
+COPY --chown=frappe:frappe . /home/frappe/frappe-bench/apps/lms/
 
-# Install the LMS app properly
+# Install LMS app in development mode
 RUN cd /home/frappe/frappe-bench && \
-    bench get-app lms . --skip-assets
+    pip install -e apps/lms
 
 # Ensure permissions are correct
 RUN chown -R frappe:frappe /home/frappe/frappe-bench/logs && \

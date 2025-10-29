@@ -1,1 +1,1 @@
-web: cd frappe-bench && bench serve --port $PORT
+web: cd lms && bench serve --port $PORT

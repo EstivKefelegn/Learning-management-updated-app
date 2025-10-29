@@ -4,25 +4,25 @@ FROM frappe/erpnext:v15.85.0
 # Set working directory
 WORKDIR /home/frappe/frappe-bench
 
-# Create and use writable directories for Render
-RUN mkdir -p /tmp/logs /tmp/sites && \
-    chmod 777 /tmp/logs /tmp/sites
+# Fix permissions as root first
+USER root
 
-# Create symlinks to writable directories
-RUN ln -sf /tmp/logs /home/frappe/frappe-bench/logs && \
-    ln -sf /tmp/sites /home/frappe/frappe-bench/sites
+# Create logs directory with proper permissions
+RUN mkdir -p /home/frappe/frappe-bench/logs && \
+    chown -R frappe:frappe /home/frappe/frappe-bench && \
+    chmod -R 755 /home/frappe/frappe-bench/logs
 
 # Copy LMS app into container
-COPY . /home/frappe/frappe-bench/
+COPY --chown=frappe:frappe . /home/frappe/frappe-bench/
 
-# Set environment variables for writable directories
-ENV BENCH_LOG_FILE=/tmp/logs/bench.log
-ENV FRAPPE_LOGS_DIR=/tmp/logs
+# Ensure permissions are correct
+RUN chown -R frappe:frappe /home/frappe/frappe-bench/logs && \
+    chmod 755 /home/frappe/frappe-bench/logs
 
 # Expose default Frappe port
 EXPOSE 8000
 
-# Use the frappe user from base image
+# Switch to frappe user
 USER frappe
 
 # Start Frappe

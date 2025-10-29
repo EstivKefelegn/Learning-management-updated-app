@@ -1,0 +1,11 @@
+{
+    "rtl_desk.bundle.css": "/assets/frappe/dist/css-rtl/desk.bundle.IQ6BNUES.css",
+    "rtl_email.bundle.css": "/assets/frappe/dist/css-rtl/email.bundle.SLTUUW56.css",
+    "rtl_login.bundle.css": "/assets/frappe/dist/css-rtl/login.bundle.ECV4QAGM.css",
+    "rtl_print.bundle.css": "/assets/frappe/dist/css-rtl/print.bundle.ZKYR3NEV.css",
+    "rtl_print_format.bundle.css": "/assets/frappe/dist/css-rtl/print_format.bundle.R2BS4EI2.css",
+    "rtl_report.bundle.css": "/assets/frappe/dist/css-rtl/report.bundle.XZTOKEU3.css",
+    "rtl_web_form.bundle.css": "/assets/frappe/dist/css-rtl/web_form.bundle.AUKUFGQY.css",
+    "rtl_website.bundle.css": "/assets/frappe/dist/css-rtl/website.bundle.CTQI5OBH.css",
+    "rtl_lms.bundle.css": "/assets/lms/dist/css-rtl/lms.bundle.TVYYAFLQ.css"
+}

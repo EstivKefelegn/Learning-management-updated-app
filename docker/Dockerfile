@@ -1,14 +1,11 @@
-# Use official Frappe/ERPNext image
 FROM frappe/erpnext:v15.85.0
 
 WORKDIR /home/frappe/frappe-bench
 
 COPY . /home/frappe/frappe-bench/
 
-# Ensure logs directory exists and is writable
-RUN mkdir -p /home/frappe/frappe-bench/logs \
-    && chown -R frappe:frappe /home/frappe/frappe-bench/logs \
-    && chmod -R 775 /home/frappe/frappe-bench/logs
+# Just create logs directory, no chown
+RUN mkdir -p /home/frappe/frappe-bench/logs
 
 EXPOSE 8000
 

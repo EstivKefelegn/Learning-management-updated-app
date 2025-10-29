@@ -4,13 +4,9 @@ WORKDIR /home/frappe/frappe-bench
 
 COPY . /home/frappe/frappe-bench/
 
-# Create a writable logs directory in /workspace
-ENV FRAPPE_LOGS_DIR=/workspace/logs
-RUN mkdir -p /workspace/logs
-
 EXPOSE 8000
 
-# Environment variables (from Render dashboard)
+# Environment variables (Render will inject these)
 ENV DB_HOST=${DB_HOST} \
     DB_PORT=${DB_PORT} \
     DB_NAME=${DB_NAME} \
@@ -20,6 +16,7 @@ ENV DB_HOST=${DB_HOST} \
     REDIS_QUEUE=${REDIS_QUEUE} \
     REDIS_SOCKETIO=${REDIS_SOCKETIO} \
     ALLOW_SIGNUP=${ALLOW_SIGNUP} \
-    DEVELOPER_MODE=${DEVELOPER_MODE}
+    DEVELOPER_MODE=${DEVELOPER_MODE} \
+    FRAPPE_LOGS_DIR=/workspace/logs
 
 CMD ["bench", "start"]

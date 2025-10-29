@@ -25,5 +25,8 @@ EXPOSE 8000
 # Switch to frappe user
 USER frappe
 
+# Set port via environment variable (bench will auto-detect)
+ENV PORT=8000
+
 # Start Frappe
-CMD ["bench", "start", "--port", "8000"]
+CMD ["bench", "start"]

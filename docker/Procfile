@@ -1,1 +1,1 @@
-web: cd lms && bench serve --port $PORT
+web: cd ../lms && bench serve --port $PORT

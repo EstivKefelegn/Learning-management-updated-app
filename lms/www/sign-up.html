@@ -1,9 +1,12 @@
-{% extends "www/main.html" %}
 
-{% block page_content %}
 <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-6 py-12">
   <div class="max-w-md w-full bg-white/90 backdrop-blur-lg p-8 rounded-2xl shadow-xl border border-gray-100">
     
+    <a href="/" class="fixed top-6 left-6 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center space-x-2 group z-50">
+      <i class="fas fa-arrow-left text-gray-600 group-hover:text-blue-600 transition-colors duration-300"></i>
+        <span class="font-medium text-gray-700 group-hover:text-blue-600">Back To Home</span>
+    </a>
+
     <!-- Header -->
     <div class="text-center mb-8">
       <div class="flex justify-center mb-3">
@@ -81,4 +84,3 @@ document.querySelector("#signupForm").addEventListener("submit", async function(
   }
 });
 </script>
-{% endblock %}

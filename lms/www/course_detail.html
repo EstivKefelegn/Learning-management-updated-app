@@ -7,6 +7,8 @@
 {% endblock %}
 
 {% block page_content %}
+
+{% set no_cache = 1 %}
 <!-- Main Content Grid -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Left Column - Course Content -->
@@ -302,120 +304,114 @@
         const statusClass = statusColors[invoiceData.status] || 'bg-gray-100 text-gray-800';
 
         const resultHTML = `
-            <div class="space-y-4 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200 shadow-sm">
-                <!-- Header -->
-                <div class="flex items-center justify-center">
-                    <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-green-800 font-bold text-xl">${message}</h3>
-                        <p class="text-green-600 text-sm">Your payment invoice is ready</p>
-                    </div>
-                </div>
-                
-                <!-- Invoice Details Card -->
-                <div class="bg-white rounded-lg border border-gray-200 p-4 space-y-3">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Payment Reference:</span>
-                                <span class="font-semibold">${invoiceData.number}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Payment Date:</span>
-                                <span>${formatDate(invoiceData.date)}</span>
-                            </div>
-                            ${invoiceData.order_id ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Order ID:</span>
-                                <span class="text-blue-600">${invoiceData.order_id}</span>
-                            </div>
-                            ` : ''}
-                            ${invoiceData.payment_id ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Payment ID:</span>
-                                <span class="text-blue-600">${invoiceData.payment_id}</span>
-                            </div>
-                            ` : ''}
+                <div class="space-y-4 p-4 sm:p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg sm:rounded-xl border border-green-200 shadow-sm">
+                    <!-- Header -->
+                    <div class="flex items-center justify-center">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center mr-2 sm:mr-3">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
                         </div>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Customer:</span>
-                                <span>${invoiceData.billing_name || invoiceData.customer}</span>
+                        <div>
+                            <h3 class="text-green-800 font-bold text-lg sm:text-xl">${message}</h3>
+                            <p class="text-green-600 text-xs sm:text-sm">Your payment invoice is ready</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Invoice Details Card -->
+                    <div class="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs sm:text-sm">
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Payment Reference:</span>
+                                    <span class="font-semibold">${invoiceData.number}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Payment Date:</span>
+                                    <span>${formatDate(invoiceData.date)}</span>
+                                </div>
+                                ${invoiceData.order_id ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Order ID:</span>
+                                    <span class="text-blue-600">${invoiceData.order_id}</span>
+                                </div>
+                                ` : ''}
+                                ${invoiceData.payment_id ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Payment ID:</span>
+                                    <span class="text-blue-600">${invoiceData.payment_id}</span>
+                                </div>
+                                ` : ''}
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Course:</span>
-                                <span class="text-blue-600 font-medium">${invoiceData.course_title}</span>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Customer:</span>
+                                    <span>${invoiceData.billing_name || invoiceData.customer}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Course:</span>
+                                    <span class="text-blue-600 font-medium">${invoiceData.course_title}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600 font-medium">Status:</span>
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                                        ${invoiceData.status}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 font-medium">Status:</span>
-                                <span class="px-2 py-1 rounded-full text-xs font-semibold ${statusClass}">
-                                    ${invoiceData.status}
+                        </div>
+                        
+                        <!-- Billing Details -->
+                        ${(invoiceData.address || invoiceData.gstin || invoiceData.pan) ? `
+                        <div class="border-t pt-3 mt-3">
+                            <h4 class="font-semibold text-gray-700 mb-2 text-sm sm:text-base">Billing Details:</h4>
+                            <div class="text-xs sm:text-sm text-gray-600 space-y-1">
+                                ${invoiceData.address ? `<div>${invoiceData.address}</div>` : ''}
+                                ${invoiceData.gstin ? `<div><strong>GSTIN:</strong> ${invoiceData.gstin}</div>` : ''}
+                                ${invoiceData.pan ? `<div><strong>PAN:</strong> ${invoiceData.pan}</div>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Amount Section -->
+                        <div class="border-t pt-3 mt-3">
+                            <div class="space-y-1 text-xs sm:text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Course Fee:</span>
+                                    <span>${invoiceData.currency} ${formatAmount(invoiceData.amount)}</span>
+                                </div>
+                                ${invoiceData.tax_amount > 0 ? `
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Tax:</span>
+                                    <span>${invoiceData.currency} ${formatAmount(invoiceData.tax_amount)}</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex justify-between items-center text-base sm:text-lg font-bold mt-2 pt-2 border-t">
+                                <span class="text-gray-700">Total Amount:</span>
+                                <span class="text-green-600">
+                                    ${invoiceData.currency} ${formatAmount(invoiceData.total_amount)}
                                 </span>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Billing Details -->
-                    ${(invoiceData.address || invoiceData.gstin || invoiceData.pan) ? `
-                    <div class="border-t pt-3 mt-3">
-                        <h4 class="font-semibold text-gray-700 mb-2">Billing Details:</h4>
-                        <div class="text-sm text-gray-600 space-y-1">
-                            ${invoiceData.address ? `<div>${invoiceData.address}</div>` : ''}
-                            ${invoiceData.gstin ? `<div><strong>GSTIN:</strong> ${invoiceData.gstin}</div>` : ''}
-                            ${invoiceData.pan ? `<div><strong>PAN:</strong> ${invoiceData.pan}</div>` : ''}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Amount Section -->
-                    <div class="border-t pt-3 mt-3">
-                        <div class="space-y-1 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Course Fee:</span>
-                                <span>${invoiceData.currency} ${formatAmount(invoiceData.amount)}</span>
-                            </div>
-                            ${invoiceData.tax_amount > 0 ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Tax:</span>
-                                <span>${invoiceData.currency} ${formatAmount(invoiceData.tax_amount)}</span>
-                            </div>
-                            ` : ''}
-                        </div>
-                        <div class="flex justify-between items-center text-lg font-bold mt-2 pt-2 border-t">
-                            <span class="text-gray-700">Total Amount:</span>
-                            <span class="text-green-600">
-                                ${invoiceData.currency} ${formatAmount(invoiceData.total_amount)}
-                            </span>
-                        </div>
-                    </div>
                 </div>
                 
-                <!-- Action Buttons -->
-                <div class="flex space-x-3">
+              <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 sm:space-x-3">
                     <button onclick="printInvoice()" 
-                        class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full sm:flex-1 bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition duration-300 flex items-center justify-center text-sm sm:text-base">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                         </svg>
-                        Print Invoice
+                        <span class="truncate">Print Invoice</span>
                     </button>
-                    <button onclick="downloadPaymentInvoice('${invoiceData.number}')" 
-                        class="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition duration-300 flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Download PDF
-                    </button>
+                  
                 </div>
-                
-                <p class="text-xs text-gray-500 text-center">
+
+                <p class="text-xs text-gray-500 text-center mt-3">
                     This payment invoice has been generated for your records. You can print or download it for your reference.
                 </p>
-            </div>
         `;
         document.getElementById("invoice-result").innerHTML = resultHTML;
     }

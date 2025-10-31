@@ -349,6 +349,10 @@ const tabsStructure = computed(() => {
 							label: 'Statistics',
 							name: 'statistics',
 							type: 'checkbox',
+							 condition: () => {
+							// Only show Statistics for Administrator role
+							return frappe.user.has_role('Administrator');
+						}
 						},
 						{
 							label: 'Notifications',

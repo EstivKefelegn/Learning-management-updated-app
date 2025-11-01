@@ -96,27 +96,26 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-	"*": {
-		"on_change": [
-			"lms.lms.doctype.lms_badge.lms_badge.process_badges",
-		]
-	},
-	"Discussion Reply": {"after_insert": "lms.lms.utils.handle_notifications"},
-	"Notification Log": {"on_change": "lms.lms.utils.publish_notifications"},
-	"User": {
-		"validate": "lms.lms.user.validate_username_duplicates",
-		"after_insert": "lms.lms.user.after_insert",
-	},
- 	"LMS Course": {
-			"after_insert": "lms.api.course_notifications.notify_users_on_new_course"
-	},
- 
+    "*": {
+        "on_change": [
+            "lms.lms.doctype.lms_badge.lms_badge.process_badges",
+        ]
+    },
+    "Discussion Reply": {"after_insert": "lms.lms.utils.handle_notifications"},
+    "Notification Log": {"on_change": "lms.lms.utils.publish_notifications"},
+    "User": {
+        "validate": "lms.lms.user.validate_username_duplicates",
+        "after_insert": "lms.lms.user.after_insert",
+    },
+    "LMS Course": {
+        "after_insert": "lms.api.course_notifications.notify_users_on_new_course",
+    },
     "LMS Enrollment": {
         "after_insert": "lms.api.lms_enrollment.notify_admin_on_enrollment"
+    }
 }
-
    
-}
+
 
 # Scheduled Tasks
 # ---------------
